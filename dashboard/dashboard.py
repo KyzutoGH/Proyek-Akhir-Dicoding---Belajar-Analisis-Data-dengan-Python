@@ -22,9 +22,20 @@ data = load_data('dashboard/main_data.csv')
 st.title("Dashboard Analisis Kualitas Udara")
 
 st.sidebar.header("Filter Data")
+
 years = sorted(data['year'].unique())
 selected_year = st.sidebar.selectbox("Pilih Tahun", years)
+
 filtered_data = data[data['year'] == selected_year]
+
+min_pm25 = float(filtered_data['PM2.5'].min())
+max_pm25 = float(filtered_data['PM2.5'].max())
+selected_pm25 = st.sidebar.slider("Pilih Rentang PM2.5", min_pm25, max_pm25, (min_pm25, max_pm25))
+
+filtered_data = filtered_data[
+    (filtered_data['PM2.5'] >= selected_pm25[0]) & 
+    (filtered_data['PM2.5'] <= selected_pm25[1])
+]
 
 st.header(f"Ringkasan Data Tahun {selected_year}")
 st.write(filtered_data.head())
