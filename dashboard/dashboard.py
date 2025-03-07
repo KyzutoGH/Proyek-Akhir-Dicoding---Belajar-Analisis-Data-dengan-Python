@@ -21,37 +21,35 @@ data = load_data('dashboard/main_data.csv')
 
 st.title("Dashboard Analisis Kualitas Udara")
 
-st.header("Ringkasan Data")
-st.write(data.head())
+st.sidebar.header("Filter Data")
+years = sorted(data['year'].unique())
+selected_year = st.sidebar.selectbox("Pilih Tahun", years)
+filtered_data = data[data['year'] == selected_year]
+
+st.header(f"Ringkasan Data Tahun {selected_year}")
+st.write(filtered_data.head())
 
 st.header("Tren PM2.5 dari Waktu ke Waktu")
 
-data['datetime'] = pd.to_datetime(data['datetime'])
+filtered_data['datetime'] = pd.to_datetime(filtered_data['datetime'])
+filtered_data = filtered_data.sort_values('datetime')
 
-daily_data = data[['datetime', 'PM2.5']].set_index('datetime').resample('D').mean().reset_index()
+daily_data = filtered_data[['datetime', 'PM2.5']].set_index('datetime').resample('D').mean().reset_index()
 
 fig1, ax1 = plt.subplots(figsize=(12, 6))
 ax1.plot(daily_data['datetime'], daily_data['PM2.5'], color='blue', linewidth=1)
-ax1.set_title("Tren PM2.5 Harian (Resampled)")
+ax1.set_title(f"Tren PM2.5 Harian Tahun {selected_year}")
 ax1.set_xlabel("Waktu")
 ax1.set_ylabel("PM2.5")
 st.pyplot(fig1)
 
 st.header("Korelasi PM2.5 dengan Variabel Meteorologi")
 
-data.reset_index(drop=True, inplace=True)
+filtered_data.reset_index(drop=True, inplace=True)
 cols_meteorologi = ['PM2.5', 'TEMP', 'PRES', 'DEWP', 'RAIN', 'WSPM']
-corr_matrix = data[cols_meteorologi].corr()
+corr_matrix = filtered_data[cols_meteorologi].corr()
 
-fig2, ax2 = plt.subplots(figsize=(8,6))
+fig2, ax2 = plt.subplots(figsize=(8, 6))
 sns.heatmap(corr_matrix, annot=True, cmap='YlGnBu', ax=ax2)
-ax2.set_title("Korelasi antara PM2.5 dan Variabel Meteorologi")
+ax2.set_title(f"Korelasi antara PM2.5 dan Variabel Meteorologi Tahun {selected_year}")
 st.pyplot(fig2)
-
-st.sidebar.header("Filter Data")
-years = data['year'].unique()
-selected_year = st.sidebar.selectbox("Pilih Tahun", sorted(years))
-filtered_data = data[data['year'] == selected_year]
-
-st.subheader(f"Data Tahun {selected_year}")
-st.write(filtered_data.head())
